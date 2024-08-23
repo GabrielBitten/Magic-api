@@ -1,53 +1,65 @@
 import { Injectable } from '@nestjs/common';
-import { Card } from './app.interface'; 
+import { Card } from './app.interface';
+import fetch from 'node-fetch';
+import * as fs from 'fs';
+import { DeckService } from './deck.service'; 
 
 @Injectable()
 export class CardsService {
-  private cards: Card[] = []; 
+  private deck: Card[] = [];
 
- 
-  addCard(card: Card): void {
-    
-    if (this.cards.find(c => c.name === card.name)) {
-      throw new Error('Card already exists in the deck.');
-    }
-    this.cards.push(card);
-  }
+  constructor(private readonly deckService: DeckService) {}
 
- 
-  getCards(): Card[] {
-    return this.cards;
-  }
-
- 
-  async fetchCardById(id: string): Promise<Card> {
-    const response = await fetch(`https://api.magicthegathering.io/v1/cards/${id}`);
+  async fetchCardByName(name: string): Promise<Card> {
+    const response = await fetch(`https://api.magicthegathering.io/v1/cards?name=${name}`);
     const data = await response.json();
-    return data.card;
+    return data.cards[0]; 
+  }
+
+  async fetchCardsByColorIdentity(colorIdentity: string[]): Promise<Card[]> {
+    const colorQuery = colorIdentity.join('|'); 
+    const response = await fetch(`https://api.magicthegathering.io/v1/cards?colorIdentity=${colorQuery}`);
+    const data = await response.json();
+    return data.cards;
+  }
+
+  async buildDeck(commanderName: string): Promise<void> {
+ 
+    const commander = await this.fetchCardByName(commanderName);
+    if (!commander || !commander.types.includes('Legendary')) {
+      throw new Error('Commander not found or is not a Legendary Creature.');
+    }
+    this.deck.push(commander);
+
+  
+    const colorIdentity = commander.colorIdentity;
+    let availableCards = await this.fetchCardsByColorIdentity(colorIdentity);
+
+   
+    const uniqueCards = availableCards.filter(
+      (card, index, self) => self.findIndex(c => c.name === card.name) === index
+    );
+
+    this.deck.push(...uniqueCards.slice(0, 98)); 
+
+  
+    fs.writeFileSync('deck.json', JSON.stringify(this.deck, null, 2));
+
+
+    await this.saveDeck();
   }
 
  
-  async addSpecificCard(): Promise<void> {
-    const specificId = '81daea6a-2735-5a46-a2da-b65a2ad5738f'; 
-    try {
-      const card = await this.fetchCardById(specificId);
-      
-      if (!card) {
-        throw new Error('Card not found.');
-      }
-      
-      if (this.cards.find(c => c.name === card.name)) {
-        throw new Error('Card already exists in the deck.');
-      }
-
-      this.cards.push(card);
-    } catch (error) {
-      throw new Error(`Failed to add card: ${error.message}`);
+  async saveDeck(): Promise<void> {
+    if (this.deck.length === 99) {
+      await this.deckService.saveDeck(this.deck);
+    } else {
+      throw new Error('Deck is not complete');
     }
   }
 
 
-  validateDeck(): boolean {
-    return this.cards.length === 99 && new Set(this.cards.map(c => c.name)).size === 99;
+  getDeck(): Card[] {
+    return this.deck;
   }
 }

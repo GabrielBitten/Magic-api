@@ -1,0 +1,30 @@
+import { Schema } from 'mongoose';
+
+export const CardSchema = new Schema({
+  name: { type: String, required: true },
+  manaCost: { type: String, required: true },
+  cmc: { type: Number, required: true },
+  colors: [String],
+  colorIdentity: [String],
+  type: { type: String, required: true },
+  supertypes: [String],
+  types: [String],
+  subtypes: [String],
+  rarity: { type: String, required: true },
+  set: { type: String, required: true },
+  setName: { type: String, required: true },
+  text: { type: String, required: true },
+  flavor: { type: String, required: true },
+  artist: { type: String, required: true },
+  number: { type: String, required: true },
+  power: { type: String },
+  toughness: { type: String },
+  layout: { type: String, required: true },
+  multiverseid: { type: String, required: true },
+  imageUrl: { type: String, required: true },
+  foreignNames: [{ type: Schema.Types.Mixed }],
+  printings: [String],
+  originalText: { type: String, required: true },
+  originalType: { type: String, required: true },
+  legalities: [{ type: Schema.Types.Mixed }]
+});

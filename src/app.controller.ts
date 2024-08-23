@@ -1,39 +1,18 @@
-import { Controller, Get, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
-import { CardsService } from './app.service'; 
-import { Card } from './app.interface'; 
+import { Controller, Get, Param } from '@nestjs/common';
+import { CardsService } from './app.service';
 
 @Controller('cards')
 export class CardsController {
   constructor(private readonly cardsService: CardsService) {}
 
-  @Post()
-  async addCard(@Body() card: Card): Promise<string> {
-    try {
-      this.cardsService.addCard(card);
-      return 'Card added successfully';
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
+  @Get('build/:commanderName')
+  async buildDeck(@Param('commanderName') commanderName: string): Promise<string> {
+    await this.cardsService.buildDeck(commanderName);
+    return 'Deck built successfully';
   }
 
-  @Get()
-  getCards(): Card[] {
-    return this.cardsService.getCards();
-  }
-
-  @Get('validate')
-  validateDeck(): string {
-    const isValid = this.cardsService.validateDeck();
-    return isValid ? 'Deck is valid' : 'Deck is invalid';
-  }
-
-  @Post('add-specific')
-  async addSpecificCard(): Promise<string> {
-    try {
-      await this.cardsService.addSpecificCard();
-      return 'Specific card added successfully';
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
+  @Get('deck')
+  getDeck() {
+    return this.cardsService.getDeck();
   }
 }
