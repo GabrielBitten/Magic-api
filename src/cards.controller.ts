@@ -1,12 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
 import { CardsService } from './cards.service';
 import { CardEntity } from './cards.entity'; 
-
+import { JwtAuthGuard } from './verificacao/jwt-auth.guard';
 @Controller('cards')
 export class CardsController {
   constructor(private readonly cardsService: CardsService) {}
 
-  
+  @UseGuards(JwtAuthGuard)
   @Post()
   async addCard(@Body() card: CardEntity): Promise<string> {
     try {
@@ -16,12 +16,12 @@ export class CardsController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-
+  @UseGuards(JwtAuthGuard)
   @Get()
   async getCards(): Promise<CardEntity[]> {
     return this.cardsService.getCards();
   }
-
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getCardById(@Param('id') id: string): Promise<CardEntity> {
     try {
@@ -33,7 +33,7 @@ export class CardsController {
     }
   }
 
-
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateCard(@Param('id') id: string, @Body() updatedCard: Partial<CardEntity>): Promise<string> {
     try {
@@ -44,7 +44,7 @@ export class CardsController {
     }
   }
 
-  // Remove uma carta pelo ID
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async deleteCard(@Param('id') id: string): Promise<string> {
     try {
